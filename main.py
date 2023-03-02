@@ -48,12 +48,12 @@ vectorizers = [
     sklearn.feature_extraction.text.TfidfVectorizer
 ]
 
-with open(f'stats_{train_set_size}.csv', 'w') as file:
-    file.write(''.join(',' + vectorizer.__name__ for vectorizer in vectorizers) + '\n')
+with open(f'stats_{train_set_size}.csv', 'w') as stats, open(f'exceptions_{train_set_size}.txt', 'w') as exceptions:
+    stats.write(''.join(',' + vectorizer.__name__ for vectorizer in vectorizers) + '\n')
     for classifier in classifiers:
-        file.write(classifier.__name__)
+        stats.write(classifier.__name__)
         for vectorizer in vectorizers:
-            file.write(',')
+            stats.write(',')
             try:
                 tester = ClassificationTester(classifier(), vectorizer())
                 time1 = time()
@@ -64,8 +64,10 @@ with open(f'stats_{train_set_size}.csv', 'w') as file:
                 accuracy_percent = round(accuracy * 100)
                 train_time = round((time2 - time1) / len(train_set) * 1000)
                 test_time = round((time3 - time2) / len(test_set) * 1000)
-                file.write(f'{accuracy_percent}% ({train_time} ms / {test_time} ms)')
-            except:
-                pass
-            file.flush()
-        file.write('\n')
+                stats.write(f'{accuracy_percent}% ({train_time} ms / {test_time} ms)')
+            except Exception as exception:
+                stats.write('-')
+                exceptions.write(f'{tester!r} -> {exception!r}\n')
+                exceptions.flush()
+            stats.flush()
+        stats.write('\n')

@@ -13,6 +13,9 @@ class ClassificationTester:
         self.classifier = classifier
         self.vectorizer = vectorizer
 
+    def __repr__(self):
+        return f'ClassificationTester(classifier={self.classifier!r}, vectorizer={self.vectorizer!r})'
+
     def train(self, articles_categories):
         vector = self.vectorizer.fit_transform(a for a, c in articles_categories)
         try:
