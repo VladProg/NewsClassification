@@ -48,26 +48,31 @@ vectorizers = [
     sklearn.feature_extraction.text.TfidfVectorizer
 ]
 
+ngram_ranges = [(1, 1), (2, 2), (1, 2)]
+
 with open(f'stats_{train_set_size}.csv', 'w') as stats, open(f'exceptions_{train_set_size}.txt', 'w') as exceptions:
-    stats.write(''.join(',' + vectorizer.__name__ for vectorizer in vectorizers) + '\n')
+    stats.write(''.join(f',"{vectorizer.__name__}(ngram_range={ngram_range})"'
+                        for vectorizer in vectorizers
+                        for ngram_range in ngram_ranges) + '\n')
     for classifier in classifiers:
         stats.write(classifier.__name__)
         for vectorizer in vectorizers:
-            stats.write(',')
-            try:
-                tester = ClassificationTester(classifier(), vectorizer())
-                time1 = time()
-                tester.train(train_set)
-                time2 = time()
-                accuracy = tester.accuracy(test_set)
-                time3 = time()
-                accuracy_percent = round(accuracy * 100)
-                train_time = round((time2 - time1) / len(train_set) * 1000)
-                test_time = round((time3 - time2) / len(test_set) * 1000)
-                stats.write(f'{accuracy_percent}% ({train_time} ms / {test_time} ms)')
-            except Exception as exception:
-                stats.write('-')
-                exceptions.write(f'{tester!r} -> {exception!r}\n')
-                exceptions.flush()
-            stats.flush()
+            for ngram_range in ngram_ranges:
+                stats.write(',')
+                try:
+                    tester = ClassificationTester(classifier(), vectorizer(ngram_range=ngram_range))
+                    time1 = time()
+                    tester.train(train_set)
+                    time2 = time()
+                    accuracy = tester.accuracy(test_set)
+                    time3 = time()
+                    accuracy_percent = round(accuracy * 100)
+                    train_time = round((time2 - time1) / len(train_set) * 1000)
+                    test_time = round((time3 - time2) / len(test_set) * 1000)
+                    stats.write(f'{accuracy_percent}% ({train_time} ms / {test_time} ms)')
+                except Exception as exception:
+                    stats.write('-')
+                    exceptions.write(f'{tester!r} -> {exception!r}\n')
+                    exceptions.flush()
+                stats.flush()
         stats.write('\n')
